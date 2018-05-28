@@ -132,6 +132,21 @@ proc exec*(self: DbConn, query:string, args: varargs[string, `$`]) =
     headers=xh)
   checkForErrors(response)
 
+## Exec a query without formatting the input parameters and without parsing
+## the output results. This is useful for bulk imports/exports, even if it
+## doesn't behave to the original interface
+proc execRaw*(self: DbConn, query:string, body:string = ""): string =
+  let xh = newHttpHeaders({
+    "Content-Length": $len(body)
+  })
+  let response = self.client.request(
+    self.createQueryUrl(query),
+    body=body,
+    httpMethod="POST",
+    headers=xh)
+  checkForErrors(response)
+  result = response.body
+
 ## Exec a query against the clickhouse database, without parsing the result
 proc execMultiple*(self: DbConn, query:string, args: seq[seq[string]]) =
   let body = encodeRows(args)

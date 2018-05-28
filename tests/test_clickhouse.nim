@@ -1,17 +1,32 @@
-import unittest, db_clickhouse
-
+import unittest, db_clickhouse, os, strutils
 
 ## To execute this suite of tests, you need to have a table generated
 ## by the following query:
 ##
-## CREATE TABLE test_table (test_column String, test_column_two String) ENGINE Memory;
+##     CREATE TABLE test_table
+##     (
+##         test_column String,
+##         test_column_two String
+##     ) ENGINE Memory;
+##
+## You can choose the hostname of the ClickHouse server you want to use as
+## testbed with the TEST_DB_HOSTNAME environment variable. The default
+## behavior is to use `localhost`
+
+## This function gets the hostname to use as a testing environment
+proc getTestHostname(): string =
+  let env = getEnv("TEST_DB_HOSTNAME")
+  if env == nil or env.len()==0:
+    result = "localhost"
+  else:
+    result = env
 
 suite "Clickhouse DB client tests":
-  var client:DbConn = db_clickhouse.open("localhost")
+  var client:DbConn = db_clickhouse.open(getTestHostname())
 
   test "create query URL":
-    check(client.createQueryUrl("SELECT 1") ==
-          "http://localhost:8123/?query=SELECT+1")
+    let u = "http://" & getTestHostname() & ":8123/?query=SELECT+1"
+    check(client.createQueryUrl("SELECT 1") == u)
 
   test "ping":
     check(client.ping)
@@ -47,6 +62,11 @@ suite "Clickhouse DB client tests":
   test "get first row":
     let value = client.getValue("SELECT * FROM test_table ORDER BY test_column")
     check(value == "0")
+
+  test "exec raw data":
+    discard client.execRaw("INSERT INTO test_table FORMAT TabSeparated", "first\tsecond")
+    check(client.execRaw("SELECT * FROM test_table FORMAT TabSeparated").splitLines().len() > 2)
+    
     
 suite "TabSeparated encoding tests":
   test "basic string decoding":

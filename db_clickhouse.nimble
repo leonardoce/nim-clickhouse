@@ -1,11 +1,10 @@
 # Package
 
 version       = "0.1.0"
-author        = "Anonymous"
-description   = "A new awesome nimble package"
+author        = "Leonardo Cecchi <leonardo.cecchi@gmail.com>"
+description   = "ClickHouse Nim interface"
 license       = "MIT"
 srcDir        = "src"
-bin           = @["testclick"]
 
 # Dependencies
 
