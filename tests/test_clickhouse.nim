@@ -96,3 +96,17 @@ suite "TabSeparated encoding tests":
 
   test "basic table encoding":
     check(encodeRows(@[@["one", "two"], @["three", "four"]]) == "one\ttwo\nthree\tfour")
+
+  test "extract null first row":
+    check(extractFirstRow(nil) == nil)
+
+  test "extract first row":
+    check(extractFirstRow("test") == "test")
+    check(extractFirstRow("test\ttwo\nthree\tfour") == "test\ttwo")
+
+  test "extract null first column":
+    check(extractFirstCol(nil) == nil)
+
+  test "extract first column":
+    check(extractFirstCol("test") == "test")
+    check(extractFirstCol("test\ttwo") == "test")

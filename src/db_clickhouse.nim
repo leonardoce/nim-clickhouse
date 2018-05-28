@@ -94,6 +94,29 @@ proc decodeRows*(data:string): seq[Row] =
 
   result = data.split('\n').map(decodeRow)
 
+## Extract the first row of a TabSeparated query data
+proc extractFirstRow*(data: string): string =
+  if data == nil:
+    return nil
+
+  let idx = data.find("\n")
+  if idx == -1:
+    result = data
+  else:
+    result = data[0..<idx]
+
+## Extract the first column of a TabSeparated query data
+proc extractFirstCol*(data: string): string =
+  if data == nil:
+    return nil
+
+  let idx = data.find("\t")
+  if idx == -1:
+    result = data
+  else:
+    result = data[0..<idx]
+
+
 ## The following functions implement the DbConn interface
 ## ------------------------------------------------------
 
@@ -191,9 +214,7 @@ proc getRow*(self: DbConn, query: string, args: varargs[string, `$`]): Row =
     headers=xh)
   checkForErrors(response)
 
-  # TODO: I can implement this in a better way, decoding only
-  # the first row
-  result = decodeRows(response.body)[0]
+  result = decodeRow(extractFirstRow(response.body))
 
 ## Executes the query and returns the first column of the
 ## first row of the dataset
@@ -209,6 +230,4 @@ proc getValue*(self: DbConn, query: string, args: varargs[string, `$`]): string 
     headers=xh)
   checkForErrors(response)
 
-  # TODO: I can implement this in a better way, decoding only
-  # the first column of the first row
-  result = decodeRows(response.body)[0][0]
+  result = extractFirstCol(extractFirstRow(response.body))
