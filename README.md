@@ -6,6 +6,8 @@ This package let's you use the [Clickhouse](https://clickhouse.yandex/)
 analytical database from the [Nim](https://nim-lang.org) language, using an
 interface similar to the ones provided for SQLite and for PostgreSQL.
 
+It contains only pure Nim code and doesn't require any external library.
+
 Internally, it uses the HTTP interface of Clickhouse, since the TCP transport
 is not meant to be used by client applications but only for cross-engine
 communications, as you can see in
