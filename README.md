@@ -27,3 +27,72 @@ db.close()
 ```
 
 You can find other examples in the unit tests of this package.
+
+## Tests
+
+If you want to run to unit tests included with this package, you will need to
+have an available ClickHouse instance with a test table with the following
+structure:
+
+```sql
+CREATE TABLE test_table
+(
+    test_column String,
+    test_column_two String
+) ENGINE Memory;
+```
+
+If you are using Docker, you can create a new ClickHouse instance with the
+following command:
+
+```
+$ docker run -d \
+    --name clickhouse-server \
+    -P 9000:9000 \
+    -P 8123:8123 \
+    -v clickhouse:/var/lib/clickhouse \
+    yandex/clickhouse-server
+```
+
+You can create the required table starting a clickhouse client like this:
+
+```
+$ docker run \
+    -ti --rm \
+    --link clickhouse-server:clickhouse-server \
+    yandex/clickhouse-client \
+    --host clickhouse-server
+
+ClickHouse client version 1.1.54383.
+Connecting to clickhouse-server:9000.
+Connected to ClickHouse server version 1.1.54383.
+
+dec0c5819f76 :) CREATE TABLE test_table
+:-] (
+:-]     test_column String,
+:-]     test_column_two String
+:-] ) ENGINE Memory;
+
+CREATE TABLE test_table
+(
+    test_column String,
+    test_column_two String
+)
+ENGINE = Memory
+
+Ok.
+
+0 rows in set. Elapsed: 0.099 sec.
+
+dec0c5819f76 :)
+```
+
+You can then execute the unit tests using nimble:
+
+```
+$ nimble tests
+```
+
+If you want you can customize the host that will be used as ClickHouse server
+during the unit tests using the `TEST_DB_HOSTNAME` environment variable, and
+this will be needed if you are using Docker Machine.
