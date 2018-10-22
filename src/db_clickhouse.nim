@@ -53,9 +53,6 @@ proc encodeRows*(data:seq[seq[string]]): string =
 
 ## Decode a string
 proc decodeString*(content: string): string =
-  if content == nil:
-    return nil
-
   result = content
   while true:
     let idx = result.find("\\")
@@ -82,23 +79,14 @@ proc decodeString*(content: string): string =
 
 ## Decode a row from a string
 proc decodeRow*(row:string): Row =
-  if row == nil:
-    return nil
-
   result = row.split('\t').map(decodeString)
 
 ## Decode a list of rows in the TabSeparated format
 proc decodeRows*(data:string): seq[Row] =
-  if data == nil:
-    return nil
-
   result = data.split('\n').map(decodeRow)
 
 ## Extract the first row of a TabSeparated query data
 proc extractFirstRow*(data: string): string =
-  if data == nil:
-    return nil
-
   let idx = data.find("\n")
   if idx == -1:
     result = data
@@ -107,9 +95,6 @@ proc extractFirstRow*(data: string): string =
 
 ## Extract the first column of a TabSeparated query data
 proc extractFirstCol*(data: string): string =
-  if data == nil:
-    return nil
-
   let idx = data.find("\t")
   if idx == -1:
     result = data

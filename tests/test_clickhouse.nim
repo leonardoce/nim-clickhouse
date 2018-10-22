@@ -16,7 +16,7 @@ import unittest, db_clickhouse, os, strutils
 ## This function gets the hostname to use as a testing environment
 proc getTestHostname(): string =
   let env = getEnv("TEST_DB_HOSTNAME")
-  if env == nil or env.len()==0:
+  if env.len()==0:
     result = "localhost"
   else:
     result = env
@@ -66,24 +66,15 @@ suite "Clickhouse DB client tests":
   test "exec raw data":
     discard client.execRaw("INSERT INTO test_table FORMAT TabSeparated", "first\tsecond")
     check(client.execRaw("SELECT * FROM test_table FORMAT TabSeparated").splitLines().len() > 2)
-    
-    
+
+
 suite "TabSeparated encoding tests":
   test "basic string decoding":
     check(decodeString("ciao") == "ciao")
     check(decodeString("ci\\tao") == "ci\tao")
 
-  test "null string decoding":
-    check(decodeString(nil) == nil)
-
-  test "null row decoding":
-    check(decodeRow(nil) == nil)
-
   test "basic row decoding":
     check(decodeRow("ciao\tda\tm\\te") == @["ciao", "da", "m\te"])
-
-  test "null data decoding":
-    check(decodeRows(nil) == nil)
 
   test "basic data decoding":
     check(decodeRows("ciao\tda\tme\nprova\tper\tte") == @[@["ciao", "da", "me"], @["prova", "per", "te"]])
@@ -97,15 +88,9 @@ suite "TabSeparated encoding tests":
   test "basic table encoding":
     check(encodeRows(@[@["one", "two"], @["three", "four"]]) == "one\ttwo\nthree\tfour")
 
-  test "extract null first row":
-    check(extractFirstRow(nil) == nil)
-
   test "extract first row":
     check(extractFirstRow("test") == "test")
     check(extractFirstRow("test\ttwo\nthree\tfour") == "test\ttwo")
-
-  test "extract null first column":
-    check(extractFirstCol(nil) == nil)
 
   test "extract first column":
     check(extractFirstCol("test") == "test")
