@@ -83,7 +83,10 @@ proc decodeRow*(row:string): Row =
 
 ## Decode a list of rows in the TabSeparated format
 proc decodeRows*(data:string): seq[Row] =
-  result = data.split('\n').map(decodeRow)
+  if data.endsWith('\n'):
+    result = data[0..<len(data)-1].split('\n').map(decodeRow)
+  else:
+    result = data.split('\n').map(decodeRow)
 
 ## Extract the first row of a TabSeparated query data
 proc extractFirstRow*(data: string): string =

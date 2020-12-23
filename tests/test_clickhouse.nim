@@ -67,6 +67,13 @@ suite "Clickhouse DB client tests":
     discard client.execRaw("INSERT INTO test_table FORMAT TabSeparated", "first\tsecond")
     check(client.execRaw("SELECT * FROM test_table FORMAT TabSeparated").splitLines().len() > 2)
 
+  test "get all rows returns the correct number of rows":
+    client.exec("TRUNCATE test_table")
+    client.exec("INSERT INTO test_table FORMAT TabSeparated", "first string", "second string")
+    client.exec("INSERT INTO test_table FORMAT TabSeparated", "third string", "fourth string")
+    let result = client.getAllRows("SELECT * FROM test_table ORDER BY test_column")
+    check(result.len() == 2)
+
 
 suite "TabSeparated encoding tests":
   test "basic string decoding":
