@@ -13,6 +13,20 @@ is not meant to be used by client applications but only for cross-engine
 communications, as you can see in
 [this bug report](https://github.com/yandex/ClickHouse/issues/45).
 
+## Installation instructions
+
+You can find this package inside the [Nim Package Directory](https://nimble.directory/pkg/dbclickhouse).
+
+If you are using Nimble you can simply add the following line inside
+your dependencies:
+
+```nim
+requires "dbclickhouse"
+```
+
+You can also set a version constraint on this package to select a certain
+release.
+
 ## Usage
 
 ```nim

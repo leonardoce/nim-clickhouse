@@ -139,7 +139,7 @@ proc exec*(self: DbConn, query:string, args: varargs[string, `$`]) =
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
-    httpMethod="POST",
+    httpMethod=HttpPost,
     headers=xh)
   checkForErrors(response)
 
@@ -153,7 +153,7 @@ proc execRaw*(self: DbConn, query:string, body:string = ""): string =
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
-    httpMethod="POST",
+    httpMethod=HttpPost,
     headers=xh)
   checkForErrors(response)
   result = response.body
@@ -167,7 +167,7 @@ proc execMultiple*(self: DbConn, query:string, args: seq[seq[string]]) =
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
-    httpMethod="POST",
+    httpMethod=HttpPost,
     headers=xh)
   checkForErrors(response)
 
@@ -184,7 +184,7 @@ proc getAllRows*(self: DbConn, query: string, args: varargs[string, `$`]): seq[R
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
-    httpMethod="GET",
+    httpMethod=HttpGet,
     headers=xh)
   checkForErrors(response)
   result = decodeRows(response.body)
@@ -198,7 +198,7 @@ proc getRow*(self: DbConn, query: string, args: varargs[string, `$`]): Row =
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
-    httpMethod="GET",
+    httpMethod=HttpGet,
     headers=xh)
   checkForErrors(response)
 
@@ -214,7 +214,7 @@ proc getValue*(self: DbConn, query: string, args: varargs[string, `$`]): string 
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
-    httpMethod="GET",
+    httpMethod=HttpGet,
     headers=xh)
   checkForErrors(response)
 
