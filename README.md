@@ -65,21 +65,17 @@ $ docker run -d \
     -p 9000:9000 \
     -p 8123:8123 \
     -v clickhouse:/var/lib/clickhouse \
-    yandex/clickhouse-server
+    clickhouse
 ```
 
 You can create the required table starting a clickhouse client like this:
 
 ```
-$ docker run \
-    -ti --rm \
-    --link clickhouse-server:clickhouse-server \
-    yandex/clickhouse-client \
-    --host clickhouse-server
+$ docker exec -it clickhouse-server clickhouse-client
 
-ClickHouse client version 1.1.54383.
-Connecting to clickhouse-server:9000.
-Connected to ClickHouse server version 1.1.54383.
+ClickHouse client version 25.7.4.11 (official build).
+Connecting to localhost:9000 as user default.
+Connected to ClickHouse server version 25.7.4.
 
 dec0c5819f76 :) CREATE TABLE test_table
 :-] (
