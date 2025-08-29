@@ -65,6 +65,8 @@ $ docker run -d \
     -p 9000:9000 \
     -p 8123:8123 \
     -v clickhouse:/var/lib/clickhouse \
+    -e CLICKHOUSE_USER=testuser \
+    -e CLICKHOUSE_PASSWORD=testpassword \
     clickhouse
 ```
 

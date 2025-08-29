@@ -9,20 +9,28 @@ import unittest, db_clickhouse, os, strutils
 ##         test_column_two String
 ##     ) ENGINE Memory;
 ##
-## You can choose the hostname of the ClickHouse server you want to use as
-## testbed with the TEST_DB_HOSTNAME environment variable. The default
-## behavior is to use `localhost`
+## You can choose the connection parameter to reach a ClickHouse server
+## by using the following environment variables:
+##
+## - TEST_DB_HOSTNAME
+## - TEST_DB_USERNAME
+## - TEST_DB_PASSWORD
 
 ## This function gets the hostname to use as a testing environment
 proc getTestHostname(): string =
-  let env = getEnv("TEST_DB_HOSTNAME")
-  if env.len()==0:
+  result = getEnv("TEST_DB_HOSTNAME")
+  if result.len() == 0:
     result = "localhost"
-  else:
-    result = env
+
+## This functions creates a database connection
+proc createConnection(): DbConn =
+  result = db_clickhouse.open(
+    getTestHostname(),
+    username=getEnv("TEST_DB_USERNAME"),
+    password=getEnv("TEST_DB_PASSWORD"))
 
 suite "Clickhouse DB client tests":
-  var client:DbConn = db_clickhouse.open(getTestHostname())
+  var client:DbConn = createConnection()
 
   test "create query URL":
     let u = "http://" & getTestHostname() & ":8123/?query=SELECT+1"

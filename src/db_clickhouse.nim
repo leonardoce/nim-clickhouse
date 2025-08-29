@@ -1,9 +1,12 @@
 import httpclient, uri, system, strutils, sequtils, httpcore
+import std/strformat
 
 type
   DbConn* = ref object
     hostName: string ## We connect to this host name
     httpPort: int    ## and using this port
+    username: string ## and this user
+    password: string ## and this password
     client: HttpClient
 
   ## This error is raised when the query execution raised an error
@@ -109,22 +112,26 @@ proc extractFirstCol*(data: string): string =
 ## ------------------------------------------------------
 
 ## Create a new clickhouse client
-proc open*(hostName: string, httpPort:int = 8123): DbConn =
+proc open*(hostName: string, httpPort:int = 8123, username:string="", password:string=""): DbConn =
   new result
   result.hostName = hostName
   result.httpPort = httpPort
+  result.username = username
+  result.password = password
   result.client = newHttpClient()
 
 ## Create a query URL, for internal use only
 proc createQueryUrl*(self: DbConn, query: string): string =
   result = "http://" & self.hostName & ":" & $self.httpPort & "/?query=" & encodeUrl(query)
 
-## Ping the clickhouse database issuing a simple query, to find if
-## it's available or not
-proc ping*(self: DbConn): bool =
-  let url = self.createQueryUrl("SELECT 1")
-  let test = self.client.getContent(url)
-  result = (test.strip() == "1")
+## Creates the basic HTTP Headers to reach the ClickHouse server
+proc createHTTPHeaders(self: DbConn, body:string): HttpHeaders =
+  result = newHttpHeaders({
+    "Content-Length": $len(body)
+  })
+  if self.username != "" and self.password != "":
+    result["X-ClickHouse-User"] = self.username
+    result["X-ClickHouse-Key"] = self.password
 
 proc checkForErrors(response: Response) =
   if response.status[0] in {'3', '4', '5'}:
@@ -133,42 +140,34 @@ proc checkForErrors(response: Response) =
 ## Exec a query against the clickhouse database, without parsing the result
 proc exec*(self: DbConn, query:string, args: varargs[string, `$`]) =
   let body = encodeRow(args)
-  let xh = newHttpHeaders({
-    "Content-Length": $len(body)
-  })
+
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
     httpMethod=HttpPost,
-    headers=xh)
+    headers=self.createHTTPHeaders(body))
   checkForErrors(response)
 
 ## Exec a query without formatting the input parameters and without parsing
 ## the output results. This is useful for bulk imports/exports, even if it
 ## doesn't behave to the original interface
 proc execRaw*(self: DbConn, query:string, body:string = ""): string =
-  let xh = newHttpHeaders({
-    "Content-Length": $len(body)
-  })
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
     httpMethod=HttpPost,
-    headers=xh)
+    headers=self.createHTTPHeaders(body))
   checkForErrors(response)
   result = response.body
 
 ## Exec a query against the clickhouse database, without parsing the result
 proc execMultiple*(self: DbConn, query:string, args: seq[seq[string]]) =
   let body = encodeRows(args)
-  let xh = newHttpHeaders({
-    "Content-Length": $len(body)
-  })
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
     httpMethod=HttpPost,
-    headers=xh)
+    headers=self.createHTTPHeaders(body))
   checkForErrors(response)
 
 ## Close the http client
@@ -178,28 +177,22 @@ proc close*(self: DbConn) =
 ## Executes the query and returns the whole result dataset
 proc getAllRows*(self: DbConn, query: string, args: varargs[string, `$`]): seq[Row] =
   let body = encodeRow(args)
-  let xh = newHttpHeaders({
-    "Content-Length": $len(body)
-  })
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
     httpMethod=HttpGet,
-    headers=xh)
+    headers=self.createHTTPHeaders(body))
   checkForErrors(response)
   result = decodeRows(response.body)
 
 ## Executes the query and returns the first row of the dataset
 proc getRow*(self: DbConn, query: string, args: varargs[string, `$`]): Row =
   let body = encodeRow(args)
-  let xh = newHttpHeaders({
-    "Content-Length": $len(body)
-  })
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
     httpMethod=HttpGet,
-    headers=xh)
+    headers=self.createHTTPHeaders(body))
   checkForErrors(response)
 
   result = decodeRow(extractFirstRow(response.body))
@@ -208,14 +201,17 @@ proc getRow*(self: DbConn, query: string, args: varargs[string, `$`]): Row =
 ## first row of the dataset
 proc getValue*(self: DbConn, query: string, args: varargs[string, `$`]): string =
   let body = encodeRow(args)
-  let xh = newHttpHeaders({
-    "Content-Length": $len(body)
-  })
   let response = self.client.request(
     self.createQueryUrl(query),
     body=body,
     httpMethod=HttpGet,
-    headers=xh)
+    headers=self.createHTTPHeaders(body))
   checkForErrors(response)
 
   result = extractFirstCol(extractFirstRow(response.body))
+
+## Ping the clickhouse database issuing a simple query, to find if
+## it's available or not
+proc ping*(self: DbConn): bool =
+  let test = self.execRaw("SELECT 1")
+  result = (test.strip() == "1")
